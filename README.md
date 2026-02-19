@@ -91,17 +91,22 @@ The model classifies signals into 10 distinct categories, mapping gender and sen
 
 ---
 
-## 🚀 Deployment (Render)
+## 🚀 Deployment (GitHub Actions + Render)
 
-The project is pre-configured for deployment on **Render** via Docker.
+We have configured a CI/CD pipeline (`.github/workflows/render_deploy.yml`) that automatically builds the Docker image on GitHub's fast servers and pushes it to your repository packages.
 
-### Steps:
-1. **Fork/Push** this repository to your GitHub.
-2. Sign in to [Render.com](https://render.com).
-3. Click **New +** -> **Web Service**.
-4. Connect this GitHub repository.
-5. Render will automatically detect the `render.yaml` and `Dockerfile`.
-6. Ensure you select the **Starter Plan** (for RAM) and set the port to `5001`.
+### Steps to Activate:
+1.  **Get Deploy Hook**:
+    *   In your Render Web Service -> Settings -> **Deploy Hook**.
+    *   Copy the URL.
+2.  **Add Secret**:
+    *   Go to your GitHub Repo -> Settings -> Secrets and variables -> Actions -> **New Repository Secret**.
+    *   Name: `RENDER_DEPLOY_HOOK`
+    *   Value: (Paste the URL).
+3.  **Update Render Image Source**:
+    *   In Render -> Settings -> **Image URL**.
+    *   Change it to: `ghcr.io/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME:latest` (lowercase).
+    *   Now, every push to `main` will automatically build and deploy!
 
 ---
 
