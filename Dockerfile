@@ -5,6 +5,7 @@ FROM python:3.7-slim
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libasound2-dev \
+    portaudio19-dev \
     gcc \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
