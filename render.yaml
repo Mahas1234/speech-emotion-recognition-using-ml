@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: sense-ai-pro
+    runtime: docker
+    plan: starter # Recommend starter plan for AI RAM requirements
+    envVars:
+      - key: PORT
+        value: 5001
+      - key: PYTHON_VERSION
+        value: 3.7.0
+    healthCheckPath: /
+    autoDeploy: true

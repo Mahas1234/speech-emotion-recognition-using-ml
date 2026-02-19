@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENSE AI | Signal Intel Pro</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/wavesurfer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-light: #a78bfa;
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --bg: #030712;
+            --card-bg: rgba(17, 24, 39, 0.6);
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-dim: #94a3b8;
+            --recording: #ef4444;
+            --emotion-color: var(--primary);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(225, 39%, 10%, 1) 0, transparent 50%);
+            overflow-x: hidden;
+            padding: 2rem 0;
+            transition: background 1s ease;
+        }
+
+        .decor-blob {
+            position: absolute;
+            filter: blur(100px);
+            z-index: -1;
+            border-radius: 50%;
+            opacity: 0.2;
+            animation: float 20s infinite alternate cubic-bezier(0.45, 0, 0.55, 1);
+            transition: background 1s ease;
+        }
+
+        @keyframes float {
+            from {
+                transform: translate(0, 0);
+            }
+
+            to {
+                transform: translate(80px, 40px) rotate(30deg);
+            }
+        }
+
+        .main-stage {
+            width: 95%;
+            max-width: 1300px;
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 2.5rem;
+            position: relative;
+        }
+
+        @media (max-width: 1050px) {
+            .main-stage {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Left Content: Branding, Waveform, Transcript */
+        .branding h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            line-height: 0.85;
+            margin-bottom: 1rem;
+            letter-spacing: -2px;
+        }
+
+        .branding h1 span {
+            display: block;
+            background: linear-gradient(90deg, #fff, var(--emotion-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 1s ease;
+        }
+
+        .branding p.tagline {
+            font-size: 1rem;
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+            font-weight: 300;
+            max-width: 450px;
+        }
+
+        .waveform-container {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            margin-top: 1rem;
+            display: none;
+            animation: fadeIn 0.8s ease;
+        }
+
+        #waveform {
+            width: 100%;
+            height: 70px;
+        }
+
+        .transcript-box {
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--emotion-color);
+        }
+
+        .transcript-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        /* Right Content: Analysis Interface */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            padding: 2.2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Real-time VU Meter */
+        #vu-meter {
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            margin-top: 5px;
+            display: none;
+            border: 1px solid var(--border);
+        }
+
+        .record-section {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .record-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: var(--recording);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        .record-btn.active {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .upload-section {
+            border: 2px dashed var(--border);
+            border-radius: 1.2rem;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .upload-section:hover {
+            border-color: var(--emotion-color);
+        }
+
+        .upload-section svg {
+            width: 28px;
+            height: 28px;
+            color: var(--emotion-color);
+            margin-bottom: 0.4rem;
+        }
+
+        .btn-glow {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 1rem;
+            border-radius: 0.8rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-glow:hover {
+            background: var(--emotion-color);
+            color: #fff;
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Comparative Slots */
+        .results-wrapper {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .result-slot {
+            animation: slideUp 0.5s ease;
+            border-radius: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            display: none;
+        }
+
+        .result-slot.active {
+            border: 1px solid var(--emotion-color);
+        }
+
+        .emotion-pill {
+            background: var(--emotion-color);
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            transition: background 1s ease;
+        }
+
+        .mini-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        .m-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.5rem;
+            border-radius: 0.6rem;
+            text-align: center;
+        }
+
+        .m-card span {
+            font-size: 0.5rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            display: block;
+        }
+
+        .m-card b {
+            font-size: 0.8rem;
+            color: #fff;
+        }
+
+        .history-card {
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+        }
+
+        .history-title {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 0.6rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .pulse-loader {
+            display: none;
+            align-self: center;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Comparative Actions */
+        .comp-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-mini {
+            flex: 1;
+            font-size: 0.65rem;
+            padding: 0.6rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            background: none;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-mini:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--emotion-color);
+        }
+
+        /* Custom Toast Notification */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: rgba(17, 24, 39, 0.9);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 10px;
+            border-left: 4px solid var(--emotion-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            font-size: 0.85rem;
+            animation: slideInRight 0.3s ease forwards;
+            min-width: 250px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Neural Status Indicator */
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Enhanced Transitions & Hover */
+        .btn-glow,
+        .btn-mini,
+        .record-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-glow:active,
+        .btn-mini:active {
+            transform: scale(0.95);
+        }
+
+        .upload-section.drag-over {
+            border-color: var(--accent);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        /* Tooltip hint */
+        .shortcut-hint {
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.2);
+            margin-top: 4px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body id="body-main">
+    <div id="toast-container"></div>
+    <div class="status-badge">
+        <div class="status-dot"></div>
+        <span>Neural Engine Online</span>
+    </div>
+    <div class="decor-blob" id="blob-1"
+        style="width: 500px; height: 500px; top: -100px; left: -100px; background: var(--primary);"></div>
+    <div class="decor-blob" id="blob-2"
+        style="width: 400px; height: 400px; bottom: -50px; right: -50px; background: var(--secondary);"></div>
+
+    <div class="main-stage">
+        <div class="branding">
+            <h1><span>SENSE AI</span>EMOTION<span>INTEL PRO.</span></h1>
+            <p class="tagline">Interactive signal intelligence. Record, Upload, and Analyze vocal emotional vectors with
+                full transcription.</p>
+
+            <div class="waveform-container" id="waves-box">
+                <div id="waveform"></div>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                    <button id="play-btn" class="btn-mini" style="max-width: 100px;">PLAY / PAUSE</button>
+                    <button id="dl-btn" class="btn-mini"
+                        style="max-width: 150px; color: var(--accent); display:none;">DOWNLOAD PDF</button>
+                </div>
+            </div>
+
+            <div class="transcript-box" id="transcript-container">
+                <span class="transcript-label">Neural Transcription</span>
+                <p id="transcript-text">Detecting speech patterns...</p>
+            </div>
+
+            <!-- Comparison Dashboard -->
+            <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-dim);">Live Intelligence</h4>
+                <div id="comp-label" style="font-size: 0.7rem; color: var(--accent); display:none;">ACTIVE COMPARISON
+                </div>
+            </div>
+
+            <div id="results-mount" class="results-wrapper" style="margin-top: 1rem;">
+                <div id="primary-res" class="result-slot active">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                        <div class="emotion-pill" id="res-emotion">WAITING...</div>
+                    </div>
+                    <p id="res-insight"
+                        style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.4; margin-bottom: 1rem;"></p>
+                    <div id="prob-bars"></div>
+                    <div class="mini-metrics">
+                        <div class="m-card"><span>Tempo</span><b id="m-tempo">0</b></div>
+                        <div class="m-card"><span>Pitch</span><b id="m-pitch">0</b></div>
+                        <div class="m-card"><span>Energy</span><b id="m-energy">0</b></div>
+                    </div>
+                </div>
+
+                <div id="comparison-res" class="result-slot">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                        <div class="emotion-pill" id="comp-emotion" style="background: var(--accent);">COMPARING...
+                        </div>
+                    </div>
+                    <p id="comp-insight"
+                        style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.4; margin-bottom: 1rem;"></p>
+                    <div id="comp-prob-bars"></div>
+                    <div class="mini-metrics">
+                        <div class="m-card"><span>Tempo</span><b id="comp-tempo">0</b></div>
+                        <div class="m-card"><span>Pitch</span><b id="comp-pitch">0</b></div>
+                        <div class="m-card"><span>Energy</span><b id="comp-energy">0</b></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="record-section">
+                <div style="display:flex; flex-direction:column; flex: 1;">
+                    <span style="font-size:0.65rem; color:var(--text-dim); text-transform:uppercase;">Live
+                        Capture</span>
+                    <span id="record-status" style="font-size:0.8rem; font-weight:600;">Mic Ready</span>
+                    <canvas id="vu-meter"></canvas>
+                </div>
+                <div id="timer" style="font-family:monospace; color:var(--text-dim); margin: 0 1rem;">
+                    <div>00:00</div>
+                    <span class="shortcut-hint">[R] KEY</span>
+                </div>
+                <button id="mic-btn" class="record-btn">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                        <path
+                            d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                    </svg>
+                </button>
+            </div>
+
+            <form id="upload-form">
+                <div class="upload-section" onclick="document.getElementById('file-input').click()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <p id="file-name" style="font-size:0.75rem; color:var(--text-dim);">Or Upload Media File</p>
+                    <input type="file" id="file-input" hidden accept=".wav,.mp3,.mp4,.mov">
+                </div>
+                <button type="submit" class="btn-glow" id="sub-btn" style="width: 100%; margin-top: 1rem;">Begin Pro
+                    Analysis</button>
+            </form>
+
+            <div class="comp-actions">
+                <button id="btn-compare" class="btn-mini">ADD TO COMPARISON</button>
+                <button id="btn-clear" class="btn-mini">RESET DASHBOARD</button>
+            </div>
+
+            <div class="pulse-loader" id="loader"></div>
+
+            <div class="history-card">
+                <div class="history-title">Session Log</div>
+                <div id="history-list">
+                    <p style="font-size:0.7rem; color:var(--text-dim); text-align:center;">Empty log</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let wavesurfer = WaveSurfer.create({
+            container: '#waveform', waveColor: '#475569', progressColor: '#8b5cf6',
+            cursorColor: '#8b5cf6', barWidth: 2, barRadius: 3, height: 70, gradient: true
+        });
+
+        const form = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const loader = document.getElementById('loader');
+        const subBtn = document.getElementById('sub-btn');
+        const body = document.getElementById('body-main');
+        const historyList = document.getElementById('history-list');
+
+        let lastResult = null;
+        let comparisonResult = null;
+
+        // VU Meter Setup
+        const vuCanvas = document.getElementById('vu-meter');
+        const vuCtx = vuCanvas.getContext('2d');
+        let audioContext, analyser, dataArray, animationId;
+
+        function startVUMeter(stream) {
+            vuCanvas.style.display = 'block';
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 64;
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            function draw() {
+                animationId = requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                vuCtx.clearRect(0, 0, vuCanvas.width, vuCanvas.height);
+
+                const barWidth = (vuCanvas.width / dataArray.length) * 2;
+                let x = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    const barHeight = (dataArray[i] / 255) * vuCanvas.height;
+                    vuCtx.fillStyle = `rgb(139, 92, 246)`;
+                    vuCtx.fillRect(x, vuCanvas.height - barHeight, barWidth - 2, barHeight);
+                    x += barWidth;
+                }
+            }
+            draw();
+        }
+
+        function stopVUMeter() {
+            if (animationId) cancelAnimationFrame(animationId);
+            if (audioContext) audioContext.close();
+            vuCanvas.style.display = 'none';
+        }
+
+        // Toast Helper
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            container.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') { e.preventDefault(); wavesurfer.playPause(); }
+            if (e.code === 'KeyR') { micBtn.click(); }
+        });
+
+        // Drag & Drop UX
+        const dropZone = document.querySelector('.upload-section');
+        ['dragenter', 'dragover'].forEach(name => {
+            dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); }, false);
+        });
+        ['dragleave', 'drop'].forEach(name => {
+            dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); }, false);
+        });
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length) { fileInput.files = files; fileInput.onchange(); showToast("File ready for analysis"); }
+        }, false);
+
+        fileInput.onchange = () => {
+            if (fileInput.files[0]) {
+                fileName.textContent = fileInput.files[0].name;
+                document.getElementById('waves-box').style.display = 'block';
+                wavesurfer.loadBlob(fileInput.files[0]);
+                showToast(`Loaded: ${fileInput.files[0].name}`);
+            }
+        };
+
+        const setTheme = (emotion) => {
+            body.className = '';
+            const e = emotion.toLowerCase();
+            if (e.includes('angry')) body.classList.add('color-angry');
+            else if (e.includes('happy')) body.classList.add('color-happy');
+            else if (e.includes('calm')) body.classList.add('color-calm');
+            else if (e.includes('sad')) body.classList.add('color-sad');
+            else if (e.includes('fearful')) body.classList.add('color-fearful');
+        };
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            if (!fileInput.files[0]) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            loader.style.display = 'block'; subBtn.style.display = 'none';
+
+            try {
+                const response = await fetch('/predict', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.emotion) {
+                    displayResult(data, 'primary-res');
+                    lastResult = data;
+                    setTheme(data.emotion);
+                    addToHistory(data.emotion);
+
+                    document.getElementById('dl-btn').style.display = 'block';
+                    document.getElementById('transcript-container').style.display = 'block';
+                    document.getElementById('transcript-text').textContent = data.transcript;
+                }
+            } catch (err) { showToast('Error in Pro Analysis'); }
+            finally { loader.style.display = 'none'; subBtn.style.display = 'block'; }
+        };
+
+        function displayResult(data, slotId) {
+            const prefix = slotId === 'primary-res' ? 'res' : 'comp';
+            document.getElementById(slotId).style.display = 'block';
+            document.getElementById(`${prefix}-emotion`).textContent = data.emotion;
+            document.getElementById(`${prefix}-insight`).textContent = data.insights;
+            document.getElementById(`m-tempo`).textContent = data.metrics.tempo; // Always update primary for metrics
+            if (slotId === 'comparison-res') {
+                document.getElementById(`comp-tempo`).textContent = data.metrics.tempo;
+                document.getElementById(`comp-pitch`).textContent = data.metrics.pitch + 'Hz';
+                document.getElementById(`comp-energy`).textContent = data.metrics.energy + '%';
+            } else {
+                document.getElementById(`m-pitch`).textContent = data.metrics.pitch + 'Hz';
+                document.getElementById(`m-energy`).textContent = data.metrics.energy + '%';
+            }
+
+            const barContainer = document.getElementById(slotId === 'primary-res' ? 'prob-bars' : 'comp-prob-bars');
+            barContainer.innerHTML = '';
+            data.probabilities.forEach(p => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:2px;"><span>${p.label}</span><b>${p.value}%</b></div>
+                    <div class="prob-bar-bg"><div class="prob-bar-fill" style="width: ${p.value}%"></div></div>
+                `;
+                barContainer.appendChild(div);
+            });
+        }
+
+        document.getElementById('btn-compare').onclick = () => {
+            if (!lastResult) return;
+            comparisonResult = lastResult;
+            displayResult(comparisonResult, 'comparison-res');
+            document.getElementById('comp-label').style.display = 'block';
+            showToast('Added to comparison');
+        };
+
+        document.getElementById('btn-clear').onclick = () => {
+            location.reload();
+        };
+
+        const addToHistory = (emotion) => {
+            if (historyList.querySelector('p')) historyList.innerHTML = '';
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `<span>${new Date().toLocaleTimeString()}</span><span style="color:var(--emotion-color)">${emotion}</span>`;
+            historyList.prepend(div);
+        };
+
+        // Mic logic
+        const micBtn = document.getElementById('mic-btn');
+        let mediaRecorder; let audioChunks = [];
+        micBtn.onclick = async () => {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                startVUMeter(stream);
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    stopVUMeter();
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const file = new File([audioBlob], "recording.wav", { type: "audio/wav" });
+                    const dt = new DataTransfer(); dt.items.add(file); fileInput.files = dt.files;
+                    fileName.textContent = "Pro Capture Ready"; wavesurfer.loadBlob(audioBlob);
+                    document.getElementById('waves-box').style.display = 'block';
+                };
+                mediaRecorder.start(); micBtn.classList.add('active');
+                document.getElementById('record-status').textContent = "Capturing Signal...";
+            } else {
+                mediaRecorder.stop();
+                micBtn.classList.remove('active');
+                document.getElementById('record-status').textContent = "Signal Saved";
+            }
+        };
+
+        // PDF Report Logic (Mixed Media Edition)
+        document.getElementById('dl-btn').onclick = () => {
+            if (!lastResult) return;
+
+            const reportElement = document.createElement('div');
+            reportElement.style.padding = '0';
+            reportElement.style.margin = '0';
+            reportElement.style.width = '800px';
+            reportElement.style.background = '#030712'; // True dark background
+            reportElement.style.color = '#fff';
+            reportElement.style.fontFamily = "'Outfit', sans-serif";
+            reportElement.style.position = 'relative';
+            reportElement.style.overflow = 'hidden';
+
+            // Custom HTML for the PDF with "Mixed Media" aesthetic
+            reportElement.innerHTML = `
+                <!-- Background Grid Decor -->
+                <div style="position:absolute; top:0; left:0; right:0; bottom:0; opacity:0.05; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px; z-index:0;"></div>
+                
+                <div style="position:relative; z-index:1; padding: 50px;">
+                    <!-- Header Protocol Section -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 40px;">
+                        <div>
+                            <div style="font-size: 10px; color: #8b5cf6; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 8px;">SIGNAL INTEL PROTOCOL v2.2</div>
+                            <h1 style="font-family: 'Playfair Display', serif; font-size: 42px; margin: 0; line-height: 1;">Neural Intelligence Report</h1>
+                        </div>
+                        <div style="text-align: right; font-size: 10px; color: #94a3b8; font-family: monospace;">
+                            ID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}<br>
+                            SECURE_ACCESS_GRANTED<br>
+                            ${new Date().toLocaleDateString()}
+                        </div>
+                    </div>
+
+                    <!-- Main Detection Block (The "WOW" Typography) -->
+                    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px; margin-bottom: 50px;">
+                        <div>
+                            <div style="text-transform: uppercase; font-size: 12px; color: #94a3b8; letter-spacing: 2px; margin-bottom: 15px;">Primary Detection Vector</div>
+                            <div style="font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 700; color: #8b5cf6; line-height: 0.9;">
+                                ${lastResult.emotion.split(' ').join('<br>')}
+                            </div>
+                            <div style="margin-top: 30px; font-size: 16px; line-height: 1.6; color: #cbd5e1; border-left: 3px solid #8b5cf6; padding-left: 20px;">
+                                ${lastResult.insights}
+                            </div>
+                        </div>
+                        
+                        <!-- Side Technical Card -->
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; align-self: start;">
+                            <div style="text-transform: uppercase; font-size: 10px; color: #8b5cf6; letter-spacing: 1px; margin-bottom: 20px; font-weight:700;">Signal Metrics</div>
+                            <div style="display:flex; flex-direction:column; gap: 20px;">
+                                <div><span style="display:block; font-size:10px; color:#94a3b8; text-transform:uppercase;">Tempo</span><b style="font-size:20px;">${lastResult.metrics.tempo} <span style="font-size:12px; font-weight:400; color:#94a3b8;">BPM</span></b></div>
+                                <div><span style="display:block; font-size:10px; color:#94a3b8; text-transform:uppercase;">Pitch</span><b style="font-size:20px;">${lastResult.metrics.pitch} <span style="font-size:12px; font-weight:400; color:#94a3b8;">Hz</span></b></div>
+                                <div><span style="display:block; font-size:10px; color:#94a3b8; text-transform:uppercase;">Energy</span><b style="font-size:20px;">${lastResult.metrics.energy} <span style="font-size:12px; font-weight:400; color:#94a3b8;">%</span></b></div>
+                            </div>
+                            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 9px; color: #94a3b8; line-height:1.4;">
+                                ENGINE: CNN-MFCC-216<br>
+                                SAMPLING_RATE: 44.1KHZ<br>
+                                DEEP_ANALYSIS_COMPLETE
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transcription Section -->
+                    <div style="background: rgba(139, 92, 246, 0.1); border-radius: 15px; padding: 30px; margin-bottom: 50px;">
+                        <div style="text-transform: uppercase; font-size: 10px; color: #8b5cf6; font-weight:700; letter-spacing: 1px; margin-bottom: 10px;">Neural Transcription</div>
+                        <div style="font-size: 20px; line-height: 1.4; font-style: italic; font-family: 'Playfair Display', serif;">
+                            "${lastResult.transcript}"
+                        </div>
+                    </div>
+
+                    <!-- Confidence visualization -->
+                    <div style="margin-bottom: 40px;">
+                        <div style="text-transform: uppercase; font-size: 10px; color: #94a3b8; font-weight:700; letter-spacing: 1px; margin-bottom: 20px;">Confidence Distribution</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: x 20px; row-gap: 15px;">
+                            ${lastResult.probabilities.slice(0, 6).map(p => `
+                                <div style="padding-right: 20px;">
+                                    <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px;">
+                                        <span>${p.label}</span><b>${p.value}%</b>
+                                    </div>
+                                    <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow:hidden;">
+                                        <div style="height: 100%; background: #8b5cf6; width: ${p.value}%;"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Footer Stamp -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 80px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 10px; font-weight: 700; color: #8b5cf6;">SENSE AI CORE v2.2</div>
+                        <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase;">Confidential Intelligence Document</div>
+                    </div>
+                </div>
+            `;
+
+            // High Quality PDF Settings
+            const opt = {
+                margin: 0,
+                filename: `SENSE_AI_INTEL_${Date.now()}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#030712'
+                },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(reportElement).save();
+        };
+
+        document.getElementById('play-btn').onclick = () => wavesurfer.playPause();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+librosa
+numpy==1.21.6
+matplotlib
+tensorflow==1.14.0
+keras==2.0.6
+scikit-learn
+pandas
+h5py==2.10.0
+pyaudio
+flask==2.2.5
+moviepy==1.0.3
+urllib3<2.0
+gunicorn
+resampy
