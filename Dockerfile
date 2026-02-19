@@ -2,7 +2,10 @@
 FROM python:3.7-slim-buster
 
 # Install system dependencies for audio and video processing
-RUN apt-get update && apt-get install -y \
+RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list && \
+    apt-get update --allow-releaseinfo-change && \
+    apt-get install -y --no-install-recommends \
     ffmpeg \
     libasound2-dev \
     portaudio19-dev \
