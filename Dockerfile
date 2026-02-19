@@ -9,12 +9,16 @@ RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.l
     ffmpeg \
     libasound2-dev \
     portaudio19-dev \
+    libsndfile1 \
     gcc \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
+
+# Upgrade pip to avoid legacy SSL issues
+RUN pip install --no-cache-dir --upgrade pip
 
 # Copy requirements and install
 COPY requirements.txt .
@@ -26,13 +30,9 @@ COPY . .
 # Create uploads directory with correct permissions
 RUN mkdir -p uploads && chmod 777 uploads
 
-# Expose port 5001
-EXPOSE 5001
-
 # Environment variables for production
 ENV FLASK_APP=app.py
 ENV PYTHONUNBUFFERED=1
 
-# Run the app using Gunicorn
-# Using 1 worker and 4 threads as a balance for AI model loading in limited RAM
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--timeout", "120", "--workers", "1", "--threads", "4", "app:app"]
+# Run the app using Gunicorn binding to the env PORT
+CMD gunicorn --bind 0.0.0.0:$PORT --timeout 120 --workers 1 --threads 4 app:app
