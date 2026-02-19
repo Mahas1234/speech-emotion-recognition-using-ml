@@ -1,11 +1,11 @@
 librosa
-numpy==1.21.6
+numpy==1.18.5
 matplotlib
 tensorflow==1.14.0
 keras==2.0.6
 scikit-learn
 pandas
-h5py==2.10.0
+h5py<3.0.0
 flask==2.2.5
 moviepy==1.0.3
 urllib3<2.0
