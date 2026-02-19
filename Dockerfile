@@ -1,5 +1,5 @@
-# Use exact Python 3.7.0 as requested
-FROM python:3.7.0-slim
+# Use 3.7-slim-buster to ensure active Linux update mirrors (Required for apt-get)
+FROM python:3.7-slim-buster
 
 # Install system dependencies for audio and video processing
 RUN apt-get update && apt-get install -y \
