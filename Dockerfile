@@ -1,5 +1,5 @@
-# Use a stable Python 3.7 image for TF 1.14 compatibility
-FROM python:3.7.10-slim-buster
+# Use exact Python 3.7.0 as requested
+FROM python:3.7.0-slim
 
 # Install system dependencies for audio and video processing
 RUN apt-get update && apt-get install -y \
